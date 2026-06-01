@@ -1,0 +1,45 @@
+name: Trump Stock Alert
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # alle 5 Minuten (kleinstmöglich bei GitHub Actions)
+  workflow_dispatch: {}       # erlaubt manuelles Starten per Knopf
+
+# Erlaubt dem Workflow, die seen_posts.json zurück ins Repo zu schreiben
+permissions:
+  contents: write
+
+# Verhindert, dass sich zwei Läufe überschneiden
+concurrency:
+  group: trump-alert
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check for new Trump posts
+        env:
+          SCRAPE_CREATORS_API_KEY: ${{ secrets.SCRAPE_CREATORS_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RUN_ONCE: "1"
+        run: python trump_stock_alert.py
+
+      - name: Save state (seen posts)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add seen_posts.json || true
+          git commit -m "update seen posts" || echo "nichts zu committen"
+          git push || echo "kein push nötig"

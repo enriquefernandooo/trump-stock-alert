@@ -2,7 +2,7 @@ name: Trump Stock Alert
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # alle 5 Minuten (kleinstmöglich bei GitHub Actions)
+    - cron: "*/15 * * * *"  # alle 15 Minuten (stabiler als */5, das GitHub stark drosselt)
   workflow_dispatch: {}       # erlaubt manuelles Starten per Knopf
 
 # Erlaubt dem Workflow, die seen_posts.json zurück ins Repo zu schreiben
